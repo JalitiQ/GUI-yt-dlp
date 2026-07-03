@@ -1,7 +1,20 @@
 import customtkinter as ctk
 import threading
 import os
+import sys
 import yt_dlp
+
+
+def _bundled_ffmpeg_dir():
+    """Répertoire contenant le ffmpeg embarqué quand l'app est packagée
+    par PyInstaller. Renvoie None si on tourne depuis les sources
+    (yt-dlp utilisera alors le ffmpeg du système)."""
+    if getattr(sys, "frozen", False):
+        base = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
+        for name in ("ffmpeg", "ffmpeg.exe"):
+            if os.path.exists(os.path.join(base, name)):
+                return base
+    return None
 
 
 ctk.set_appearance_mode("System")
@@ -117,6 +130,10 @@ class App(ctk.CTk):
             "quiet": True,
             "no_warnings": True,
         }
+
+        ffmpeg_dir = _bundled_ffmpeg_dir()
+        if ffmpeg_dir:
+            opts["ffmpeg_location"] = ffmpeg_dir
 
         if is_audio:
             opts["format"] = "bestaudio/best"

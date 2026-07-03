@@ -13,7 +13,13 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt pyinstaller
-      - run: pyinstaller --onefile --windowed main.py
+      - name: Récupérer ffmpeg
+        run: |
+          curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o ffmpeg.tar.xz
+          tar xf ffmpeg.tar.xz
+          cp ffmpeg-*-static/ffmpeg ffmpeg
+          chmod +x ffmpeg
+      - run: pyinstaller --onefile --windowed --add-binary "ffmpeg:." main.py
       - uses: actions/upload-artifact@v4
         with:
           name: app-linux
@@ -27,7 +33,13 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt pyinstaller
-      - run: pyinstaller --onefile --windowed main.py
+      - name: Récupérer ffmpeg
+        shell: pwsh
+        run: |
+          curl.exe -L https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip -o ffmpeg.zip
+          Expand-Archive ffmpeg.zip -DestinationPath ffmpeg_extract
+          Copy-Item (Get-ChildItem ffmpeg_extract -Recurse -Filter ffmpeg.exe)[0].FullName ffmpeg.exe
+      - run: pyinstaller --onefile --windowed --add-binary "ffmpeg.exe;." main.py
       - uses: actions/upload-artifact@v4
         with:
           name: app-windows
@@ -41,8 +53,18 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt pyinstaller
-      - run: pyinstaller --onefile --windowed main.py
+      - name: Récupérer ffmpeg
+        run: |
+          case "$(uname -m)" in
+            arm64) URL=https://github.com/eugeneware/ffmpeg-static/releases/download/b6.0/ffmpeg-darwin-arm64 ;;
+            *)     URL=https://github.com/eugeneware/ffmpeg-static/releases/download/b6.0/ffmpeg-darwin-x64 ;;
+          esac
+          curl -L "$URL" -o ffmpeg
+          chmod +x ffmpeg
+      - run: pyinstaller --onefile --windowed --name DownloaderYT --add-binary "ffmpeg:." main.py
+      - name: Zipper le .app (préserve les permissions)
+        run: ditto -c -k --keepParent dist/DownloaderYT.app DownloaderYT-macos.zip
       - uses: actions/upload-artifact@v4
         with:
           name: app-macos
-          path: dist/main
+          path: DownloaderYT-macos.zip
