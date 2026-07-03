@@ -120,9 +120,13 @@ class App(ctk.CTk):
                 msg = f"  {d.get('_percent_str', '').strip()}  {speed}  ETA {eta}"
                 self.after(0, lambda m=msg: self._log_write(m))
             elif d["status"] == "finished":
+                # Ce hook se déclenche AVANT la conversion ffmpeg : d["filename"]
+                # pointe encore sur le fichier source (.webm/.m4a). On affiche
+                # l'extension finale réelle pour ne pas induire en erreur.
                 self.after(0, lambda: self._progress.set(1))
-                name = os.path.basename(d["filename"])
-                self.after(0, lambda n=name: self._log_write(f"✓  Fichier : {n}"))
+                base = os.path.splitext(os.path.basename(d["filename"]))[0]
+                ext = "mp3" if is_audio else "mp4"
+                self.after(0, lambda n=f"{base}.{ext}": self._log_write(f"✓  Fichier : {n}"))
 
         opts = {
             "outtmpl": os.path.join(self._output_dir, "%(title)s.%(ext)s"),
