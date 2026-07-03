@@ -133,6 +133,9 @@ class App(ctk.CTk):
             "progress_hooks": [progress_hook],
             "quiet": True,
             "no_warnings": True,
+            # Ne télécharger que la vidéo de l'URL, jamais la playlist/radio
+            # (ex. les liens "&list=RD..." générés par YouTube).
+            "noplaylist": True,
         }
 
         ffmpeg_dir = _bundled_ffmpeg_dir()
